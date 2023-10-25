@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rmcli"
-version = "0.1.0"
+version = "0.2.0"
 description = "CLI interface to RASENMAEHER API"
 authors = ["Eero af Heurlin <eero.afheurlin@iki.fi>"]
 homepage = "https://github.com/pvarki/python-rasenmaeher-rmcli/"
