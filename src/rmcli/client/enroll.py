@@ -70,3 +70,22 @@ class EnrollClient(RMClientBase):
         payload = await resp.json()
         LOGGER.debug("payload={}".format(payload))
         return payload["approvecode"], payload["jwt"]
+
+    async def enrollment_is_approved(self, jwt: str) -> bool:
+        """Check if we are approved"""
+        self.set_jwt(jwt)
+        resp = await self._session.get(
+            f"{self.url_base}/api/v1/enrollment/have-i-been-accepted",
+            timeout=self.timeout,
+        )
+        LOGGER.debug("resp={}".format(resp))
+        resp.raise_for_status()
+        payload = await resp.json()
+        LOGGER.debug("payload={}".format(payload))
+        return bool(payload["have_i_been_accepted"])
+
+    async def enroll_user_finish(self, callsign: str, jwt: str) -> Tuple[bytes, bytes]:
+        """Finish the enrollment by downloading the cert"""
+        if not await self.enrollment_is_approved(jwt):
+            raise RuntimeError("Not yet approved")
+        return await self.get_cert(callsign)

@@ -49,18 +49,27 @@ def cli_group(  # pylint: disable=R0913
 @click.option("-a", "--admin", is_flag=True, help="Do admin entrollment")
 @click.argument("code", required=True)
 @click.argument("callsign", required=True)
+@click.option("--wait", type=float, default=10.0, help="initial wait and check interval")
 @click.pass_context
-def enroll(ctx: click.Context, admin: bool, callsign: str, code: str) -> None:
+def enroll(ctx: click.Context, admin: bool, callsign: str, code: str, wait: float) -> None:
     """Do enrollment, write callsign.crt and callsign.key"""
 
     async def enroll_actual() -> int:
         """Do enrollment, write callsign.crt and callsign.key"""
-        nonlocal ctx, admin, callsign, code
+        nonlocal ctx, admin, callsign, code, wait
         if not admin:
-            raise NotImplementedError("user enrollment not done yet")
-
-        async with EnrollClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
-            certbytes, keybytes = await client.enroll_admin(callsign, code)
+            async with EnrollClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
+                acode, jwt = await client.enroll_user_init(callsign, code)
+                click.echo(f"Approvecode: {acode}")
+                LOGGER.info("Waiting for approval")
+                await asyncio.sleep(wait)
+                while not await client.enrollment_is_approved(jwt):
+                    LOGGER.warning("Enrollment for {} not yet approved. code is: {}".format(callsign, acode))
+                    await asyncio.sleep(wait)
+                certbytes, keybytes = await client.enroll_user_finish(callsign, jwt)
+        else:
+            async with EnrollClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
+                certbytes, keybytes = await client.enroll_admin(callsign, code)
 
         certpth = Path(f"{callsign}.crt")
         certpth.write_bytes(certbytes)

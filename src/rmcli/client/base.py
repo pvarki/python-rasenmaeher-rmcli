@@ -16,23 +16,26 @@ from cryptography.hazmat.primitives import serialization
 LOGGER = logging.getLogger(__name__)
 
 
+def ca_session() -> aiohttp.ClientSession:
+    """Insert cas, return session"""
+    ssl_ctx = get_ca_context(ssl.Purpose.SERVER_AUTH)
+    conn = aiohttp.TCPConnector(ssl=ssl_ctx)
+    return aiohttp.ClientSession(connector=conn)
+
+
 @dataclass
 class RMClientBase:
     """Rasenmaeher Client base"""
 
     url_base: str = field()
     timeout: float = field(default=5.0)
-    _session: aiohttp.ClientSession = field(default_factory=aiohttp.ClientSession)
+    _session: aiohttp.ClientSession = field(default_factory=ca_session)
 
     def __post_init__(self) -> None:
         """Set basic stuff"""
         self._session.headers["Accept"] = "application/json"
         if self.url_base.endswith("/"):
             self.url_base = self.url_base[:-1]
-        # Insert extra CA certs
-        ssl_ctx = get_ca_context(ssl.Purpose.SERVER_AUTH)
-        conn = aiohttp.TCPConnector(ssl=ssl_ctx)
-        self._session = aiohttp.ClientSession(connector=conn)
 
     async def set_identity(self, certfile: Path, keyfile: Path) -> None:
         """Set identity to mTLS cert"""
