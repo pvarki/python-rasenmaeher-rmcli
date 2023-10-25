@@ -34,8 +34,9 @@ class RMClientBase:
         conn = aiohttp.TCPConnector(ssl=ssl_ctx)
         self._session = aiohttp.ClientSession(connector=conn)
 
-    def set_identity(self, certfile: Path, keyfile: Path) -> None:
+    async def set_identity(self, certfile: Path, keyfile: Path) -> None:
         """Set identity to mTLS cert"""
+        await self._session.close()
         self._session = get_session((certfile, keyfile))
 
     def set_jwt(self, jwt: str) -> None:

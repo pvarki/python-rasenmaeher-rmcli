@@ -73,6 +73,56 @@ def enroll(ctx: click.Context, admin: bool, callsign: str, code: str) -> None:
     ctx.exit(ctx.obj["loop"].run_until_complete(enroll_actual()))
 
 
+@cli_group.group(name="admin")
+@click.argument("certfile", required=True, type=click.Path(exists=True))
+@click.argument("keyfile", required=True, type=click.Path(exists=True))
+@click.pass_context
+def admingrp(ctx: click.Context, certfile: Path, keyfile: Path) -> None:
+    """Admin commands, requires mTLS identity"""
+    ctx.ensure_object(dict)
+    ctx.obj["ident"] = (Path(certfile), Path(keyfile))
+    if "mtls" not in ctx.obj["url"]:
+        LOGGER.warning("Url does not contain 'mtls' are you sure it's correct ?")
+
+
+@admingrp.command()
+@click.option("-a", "--admin", is_flag=True, help="Create single-use admin logincode")
+@click.pass_context
+def invite(ctx: click.Context, admin: bool) -> None:
+    """Create invite code for users"""
+
+    async def invite_actual() -> int:
+        """Actual operation"""
+        nonlocal ctx, admin
+        if admin:
+            raise NotImplementedError()
+        async with EnrollClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
+            await client.set_identity(*ctx.obj["ident"])
+            code = await client.create_pool()
+        click.echo(code)
+        return 0
+
+    ctx.exit(ctx.obj["loop"].run_until_complete(invite_actual()))
+
+
+@admingrp.command()
+@click.argument("code", required=True)
+@click.argument("callsign", required=True)
+@click.pass_context
+def approve(ctx: click.Context, code: str, callsign: str) -> None:
+    """Approve given enrollment"""
+
+    async def approve_actual() -> int:
+        """Actual operation"""
+        nonlocal ctx, code, callsign
+        async with EnrollClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
+            await client.set_identity(*ctx.obj["ident"])
+            await client.approve(callsign, code)
+        return 0
+
+    ctx.exit(ctx.obj["loop"].run_until_complete(approve_actual()))
+
+
 def rmcli_cli() -> None:
     """CLI interface to RASENMAEHER API"""
     init_logging(logging.WARNING)
