@@ -59,8 +59,22 @@ class RMClientBase:
         LOGGER.debug("payload={}".format(payload))
         self.set_jwt(payload["jwt"])
 
-    async def get_cert(self, callsign: str) -> Tuple[bytes, bytes]:
+    async def get_callsign(self) -> str:
+        """Get the callsign for the currently authenticated session"""
+        resp = await self._session.get(
+            f"{self.url_base}/api/v1/check-auth/mtls_or_jwt",
+            timeout=self.timeout,
+        )
+        LOGGER.debug("resp={}".format(resp))
+        resp.raise_for_status()
+        payload = await resp.json()
+        LOGGER.debug("payload={}".format(payload))
+        return str(payload["userid"])
+
+    async def get_cert(self, callsign: Optional[str] = None) -> Tuple[bytes, bytes]:
         """Download the pfx, decode it and return the cert and key as PEM"""
+        if not callsign:
+            callsign = await self.get_callsign()
         resp = await self._session.get(
             f"{self.url_base}/api/v1/enduserpfx/{callsign}.pfx",
             timeout=self.timeout,

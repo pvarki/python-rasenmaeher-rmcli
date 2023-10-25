@@ -1,5 +1,5 @@
 """Enrollment things"""
-from typing import Tuple
+from typing import Tuple, Optional
 import logging
 
 from .base import RMClientBase
@@ -84,7 +84,7 @@ class EnrollClient(RMClientBase):
         LOGGER.debug("payload={}".format(payload))
         return bool(payload["have_i_been_accepted"])
 
-    async def enroll_user_finish(self, callsign: str, jwt: str) -> Tuple[bytes, bytes]:
+    async def enroll_user_finish(self, jwt: str, callsign: Optional[str] = None) -> Tuple[bytes, bytes]:
         """Finish the enrollment by downloading the cert"""
         if not await self.enrollment_is_approved(jwt):
             raise RuntimeError("Not yet approved")
