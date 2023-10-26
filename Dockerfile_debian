@@ -100,6 +100,7 @@ WORKDIR /app
 # and install the wheels we built in the previous step. generate default config
 RUN --mount=type=ssh apt-get update && apt-get install -y \
         bash \
+        git \
         tini \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \

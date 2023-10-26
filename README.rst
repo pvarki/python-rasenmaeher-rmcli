@@ -2,7 +2,9 @@
 rmcli
 =====
 
-CLI interface to RASENMAEHER API
+CLI interface to RASENMAEHER API.
+
+See the cli built-in help for details
 
 
 Docker
@@ -70,7 +72,7 @@ There's a "production" target as well for running the application, remember to c
 architecture tag to arm64 if building on ARM::
 
     docker build --ssh default --target production -t rmcli:amd64-latest .
-    docker run -it --name rmcli rmcli:amd64-latest
+    docker run -it --rm -v `pwd`:/workdir --name rmcli rmcli:amd64-latest
 
 Development
 -----------
@@ -78,7 +80,7 @@ TODO: Remove the repo init from this document after you have done it.
 
 TLDR:
 
-- Create and activate a Python 3.8 virtualenv (assuming virtualenvwrapper)::
+- Create and activate a Python 3.11 virtualenv (assuming virtualenvwrapper)::
 
     mkvirtualenv -p `which python3.11` my_virtualenv
 

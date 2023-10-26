@@ -97,6 +97,7 @@ WORKDIR /app
 # Install system level deps for running the package (not devel versions for building wheels)
 # and install the wheels we built in the previous step. generate default config
 RUN --mount=type=ssh apk add --no-cache \
+        git \
         bash \
         tini \
     && chmod a+x /docker-entrypoint.sh \

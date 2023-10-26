@@ -1,6 +1,15 @@
 # IDE settings
 .idea
 
+# certs
+*.crt
+*.key
+*.pem
+
+# other artfacts like client-zips
+*.zip
+
+
 # ci artefacts
 pytest*.xml
 
