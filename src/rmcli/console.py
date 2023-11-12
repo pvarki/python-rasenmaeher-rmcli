@@ -68,7 +68,7 @@ def enroll(ctx: click.Context, admin: bool, callsign: str, code: str, wait: floa
                 while not await client.enrollment_is_approved(jwt):
                     LOGGER.warning("Enrollment for {} not yet approved. code is: {}".format(callsign, acode))
                     await asyncio.sleep(wait)
-                certbytes, keybytes = await client.enroll_user_finish(callsign, jwt)
+                certbytes, keybytes = await client.enroll_user_finish(jwt, callsign)
         else:
             async with EnrollClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
                 certbytes, keybytes = await client.enroll_admin(callsign, code)
