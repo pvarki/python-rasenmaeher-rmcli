@@ -68,7 +68,7 @@ def enroll(ctx: click.Context, admin: bool, callsign: str, code: str, wait: floa
                 while not await client.enrollment_is_approved(jwt):
                     LOGGER.warning("Enrollment for {} not yet approved. code is: {}".format(callsign, acode))
                     await asyncio.sleep(wait)
-                certbytes, keybytes = await client.enroll_user_finish(callsign, jwt)
+                certbytes, keybytes = await client.enroll_user_finish(jwt, callsign)
         else:
             async with EnrollClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
                 certbytes, keybytes = await client.enroll_admin(callsign, code)
@@ -132,6 +132,42 @@ def approve(ctx: click.Context, code: str, callsign: str) -> None:
         return 0
 
     ctx.exit(ctx.obj["loop"].run_until_complete(approve_actual()))
+
+
+@admingrp.command()
+@click.argument("callsign", required=True)
+@click.pass_context
+def revoke(ctx: click.Context, callsign: str) -> None:
+    """Revoke given callsign"""
+
+    async def revoke_actual() -> int:
+        """Actual operation"""
+        nonlocal ctx, callsign
+        async with UserClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
+            await client.set_identity(*ctx.obj["ident"])
+            if await client.revoke(callsign):
+                return 0
+            return 1
+
+    ctx.exit(ctx.obj["loop"].run_until_complete(revoke_actual()))
+
+
+@admingrp.command(name="list")
+@click.pass_context
+def list_users(ctx: click.Context) -> None:
+    """List users"""
+
+    async def list_actual() -> int:
+        """Actual operation"""
+        nonlocal ctx
+        async with UserClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
+            await client.set_identity(*ctx.obj["ident"])
+            ret = await client.list()
+            for item in ret:
+                click.echo(item)
+            return 0
+
+    ctx.exit(ctx.obj["loop"].run_until_complete(list_actual()))
 
 
 @cli_group.group(name="user")

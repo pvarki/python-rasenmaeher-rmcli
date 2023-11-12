@@ -22,6 +22,35 @@ class UserFile:
 class UserClient(RMClientBase):
     """Client for user ops, all of these require some auth"""
 
+    async def list(self) -> List[str]:
+        """List users"""
+        resp = await self._session.get(
+            f"{self.url_base}/api/v1/people/list",
+            timeout=self.timeout,
+        )
+        LOGGER.debug("resp={}".format(resp))
+        resp.raise_for_status()
+        payload = await resp.json()
+        ret = []
+        for item in payload["callsign_list"]:
+            if item["roles"]:
+                ret.append(f"{item['callsign']} ({' '.join(item['roles'])})")
+            else:
+                ret.append(item["callsign"])
+        return ret
+
+    async def revoke(self, callsign: str) -> bool:
+        """Revoke callsign"""
+        resp = await self._session.delete(
+            f"{self.url_base}/api/v1/people/{callsign}",
+            timeout=self.timeout,
+        )
+        LOGGER.debug("resp={}".format(resp))
+        resp.raise_for_status()
+        payload = await resp.json()
+        LOGGER.debug("payload={}".format(payload))
+        return bool(payload["success"])
+
     async def get_files(self) -> Dict[str, List[UserFile]]:
         """Get all user files we can"""
         resp = await self._session.get(
