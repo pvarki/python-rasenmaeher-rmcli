@@ -152,6 +152,24 @@ def revoke(ctx: click.Context, callsign: str) -> None:
     ctx.exit(ctx.obj["loop"].run_until_complete(revoke_actual()))
 
 
+@admingrp.command(name="list")
+@click.pass_context
+def list_users(ctx: click.Context) -> None:
+    """List users"""
+
+    async def list_actual() -> int:
+        """Actual operation"""
+        nonlocal ctx
+        async with UserClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
+            await client.set_identity(*ctx.obj["ident"])
+            ret = await client.list()
+            for item in ret:
+                click.echo(item)
+            return 0
+
+    ctx.exit(ctx.obj["loop"].run_until_complete(list_actual()))
+
+
 @cli_group.group(name="user")
 @click.argument("certfile", required=True, type=click.Path(exists=True))
 @click.argument("keyfile", required=True, type=click.Path(exists=True))
