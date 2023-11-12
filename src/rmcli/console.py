@@ -134,6 +134,24 @@ def approve(ctx: click.Context, code: str, callsign: str) -> None:
     ctx.exit(ctx.obj["loop"].run_until_complete(approve_actual()))
 
 
+@admingrp.command()
+@click.argument("callsign", required=True)
+@click.pass_context
+def revoke(ctx: click.Context, callsign: str) -> None:
+    """Revoke given callsign"""
+
+    async def revoke_actual() -> int:
+        """Actual operation"""
+        nonlocal ctx, callsign
+        async with UserClient(url_base=ctx.obj["url"], timeout=ctx.obj["timeout"]) as client:
+            await client.set_identity(*ctx.obj["ident"])
+            if await client.revoke(callsign):
+                return 0
+            return 1
+
+    ctx.exit(ctx.obj["loop"].run_until_complete(revoke_actual()))
+
+
 @cli_group.group(name="user")
 @click.argument("certfile", required=True, type=click.Path(exists=True))
 @click.argument("keyfile", required=True, type=click.Path(exists=True))
