@@ -18,7 +18,7 @@ RUN export RESOLVED_VERSIONS=`pyenv_resolve $PYTHON_VERSIONS` \
 ######################
 # Base builder image #
 ######################
-FROM python:3.11-alpine3.18 as builder_base
+FROM python:3.12.3-alpine3.18 as builder_base
 
 ENV \
   # locale
@@ -90,7 +90,7 @@ RUN --mount=type=ssh source /.venv/bin/activate \
 #########################
 # Main production build #
 #########################
-FROM python:3.11-alpine3.18 as production
+FROM python:3.12.3-alpine3.18 as production
 COPY --from=production_build /tmp/wheelhouse /tmp/wheelhouse
 COPY --from=production_build /docker-entrypoint.sh /docker-entrypoint.sh
 WORKDIR /app
